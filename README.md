@@ -88,3 +88,4 @@ This software operates under a split tri-license model enforcing strict restrict
 	* Scope: Grants rights to run, study, modify, and distribute copies of the software or derivative works for non-commercial purposes only.
 	* Corporate Gating: For-profit entities are granted a single 30-day internal evaluation exception to test the tools locally before requiring a separate commercial license agreement.
 	* Ownership of Results: Scores, figures, datasets, and mathematical analyses produced by running the codebase are explicitly the property of the User.
+    * Inquiries: Contact 2026.stell@gmail.com.
