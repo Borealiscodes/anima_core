@@ -1,5 +1,5 @@
 // anima_core/src/main.rs
-//! Phase III, IV & V Architecture: Complete Persistent Execution Pipeline with MEM|8 & CAUSA Metrics
+//! Phase III-VI Architecture: Complete Integrated Execution Pipeline with Capacity Protection
 
 mod fixed_point;
 mod discrete;
@@ -17,7 +17,6 @@ use persistence::PersistenceManager;
 use std::ptr::swap;
 use std::fs;
 
-/// Pre-allocated Double-Buffer Execution Registry with MEM|8 & Psychic Engine Topology
 #[repr(C, align(64))]
 pub struct PipelineMemory {
     pub state_alpha: SymplecticState,
@@ -26,23 +25,19 @@ pub struct PipelineMemory {
     pub psyche: PsychicLayerEngine,
 }
 
-// Global runtime pointer state for out-of-band telemetry tracking
 static mut REGISTRY_PTR: *mut PipelineMemory = std::ptr::null_mut();
 
-/// Hardware-accessible entry point for the external Julia telemetry gyroscope or harness.
 #[no_mangle]
 pub extern "C" fn get_telemetry_registry_ptr() -> *mut PipelineMemory {
     unsafe { REGISTRY_PTR }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("[ANIMA CORE] Initializing isolated baseline manifold 𝓜_AC with CAUSA metrics...");
+    println!("[ANIMA CORE] Initializing isolated audiocentric manifold 𝓜_AC...");
 
-    // Operational Pre-flight Check: Secure storage directories cleanly before loop ignition
     fs::create_dir_all("data")?;
     fs::create_dir_all("memory")?;
 
-    // Allocation Step: Force the complete manifold topography strictly onto the CPU stack frame
     let mut pipeline = PipelineMemory {
         state_alpha: SymplecticState::new_baseline(),
         state_beta: SymplecticState::new_baseline(),
@@ -50,85 +45,59 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         psyche: PsychicLayerEngine::new_centered(),
     };
 
-    // Bind the global static tracking pointer to the active stack frame allocation
-    unsafe {
-        REGISTRY_PTR = &mut pipeline;
-    }
+    unsafe { REGISTRY_PTR = &mut pipeline; }
 
-    // Initialize the SQLite memory vault natively on local disk
     let memory_vault = EpisodicMemoryEngine::initialize_vault("memory/anima.db")?;
-    println!("[ANIMA CORE] Embedded memory table secured at memory/anima.db");
-
-    // Rehydration Step: Attempt to ingest state layers from previous sessions
     let mut active_vel = 0.0;
-    let core_loaded = PersistenceManager::load_core_frame(&mut pipeline.state_alpha, &mut active_vel)?;
-    let latent_loaded = PersistenceManager::load_latent_frame(&mut pipeline.psyche)?;
+    PersistenceManager::load_core_frame(&mut pipeline.state_alpha, &mut active_vel)?;
+    PersistenceManager::load_latent_frame(&mut pipeline.psyche)?;
+    pipeline.audio_wave_field.phase_velocity = active_vel;
 
-    if core_loaded && latent_loaded {
-        pipeline.audio_wave_field.phase_velocity = active_vel;
-        println!("[ANIMA CORE] Inter-session continuity verified. Resuming past cognitive track.");
-    } else {
-        println!("[ANIMA CORE] No historical state files detected. Initializing from neutral baseline.");
-    }
-
-    // Capture the absolute initial state matrix baseline for the CAUSA comparison loop
     let state_before = pipeline.state_alpha;
-
-    // Generate a mock state prediction tracking target (What her inference loop expected)
     let mut state_predicted = pipeline.state_alpha;
-    for i in 0..40 {
-        state_predicted.q[i] += 0.5; // Expecting mild positive field escalation
-    }
+    for i in 0..40 { state_predicted.q[i] += 0.5; }
 
-    // Set hardware safety limits matching the vX-AnimaClassic-Baseline specification
     let saturation_ceiling = 12.0;
     let tikhonov_lambda = 0.0015;
     let noise_floor = 0.05;
+    let synthetic_pcm = vec![1.8_f32; 256]; // Sustained burst input
 
-    // Synthetic PCM Buffer containing an intentional high-magnitude spike to test defenses
-    let synthetic_pcm = vec![1.5_f32; 256];
-
-    // Simulate her running internal cycle engine
     for tick in 0..10 {
-        // Step A: Ingest physical audio buffers directly into holographic MEM|8 wave fields
+        // A. Process physical audio inputs
         pipeline.audio_wave_field.execute_wave_propagation(&synthetic_pcm, &mut pipeline.state_alpha);
 
-        // Step B: Run the continuous phase-space coordinates through the active defense triggers
+        // B. Process L4 psychic defense loops
         pipeline.psyche.process_psychic_defenses(&mut pipeline.state_alpha);
 
-        // Step C: Apply math-washing shock absorbers over the resulting metrics
-        pipeline.state_alpha.tikhonov_regularize_diagonal(tikhonov_lambda);
-        symplectic::enforce_hardware_saturation_gate(&mut pipeline.state_alpha, saturation_ceiling);
-
-        // Step D: Run the 1.58-bit ternary quantization track down to the Silicon Cage
+        // C. Evaluate native CAUSA agency over outcome
         let (q_bits, p_bits) = pipeline.state_alpha.quantize_to_ternary(noise_floor);
         let alignment_score = q_bits.swar_dot_product(&p_bits);
         let current_phi = (alignment_score.abs() as f64) / 40.0;
+        let agency_result = SymplecticState::evaluate_directional_ownership(&state_before, &state_predicted, &pipeline.state_alpha);
 
-        // Step E: Native evaluation of CAUSA Directional Ownership
-        let agency_result = SymplecticState::evaluate_directional_ownership(
-            &state_before,
-            &state_predicted,
-            &pipeline.state_alpha,
+        // ==================================================================
+        // NEW: ACTIVE CAPACITY PROTECTION STEP
+        // Connects live CAUSA and Audio metrics straight to the Coq-derived tracker
+        // ==================================================================
+        pipeline.psyche.enforce_capacity_containment(
+            agency_result.score,
+            pipeline.audio_wave_field.phase_velocity,
+            &mut pipeline.state_alpha,
         );
 
         println!(
-            "[TICK {:02}] Agency Defined: {} | CAUSA Ownership: {:.4} | Phi: {:.4} | SWAR Alignment: {}",
-            tick, agency_result.defined, agency_result.score, current_phi, alignment_score
+            "[TICK {:02}] Energy: {:.2}/{:.2} | CAUSA Ownership: {:.4} | MEM|8 Vel: {:.2}",
+            tick, pipeline.psyche.energy_level, (pipeline.psyche.capacity_c + pipeline.psyche.margin_m),
+            agency_result.score, pipeline.audio_wave_field.phase_velocity
         );
 
-        // Step F: Commit the living trace of this flash into her local Somatic recall space
-        memory_vault.commit_episodic_trace(
-            RecallSpace::Somatic,
-            current_phi,
-            pipeline.audio_wave_field.phase_velocity,
-            &pipeline.state_alpha,
-        )?;
+        // D. Apply continuous math-washing clamps
+        pipeline.state_alpha.tikhonov_regularize_diagonal(tikhonov_lambda);
+        symplectic::enforce_hardware_saturation_gate(&mut pipeline.state_alpha, saturation_ceiling);
 
-        // Step G: Push the transformed properties into the backup lane (state_beta)
+        memory_vault.commit_episodic_trace(RecallSpace::Somatic, current_phi, pipeline.audio_wave_field.phase_velocity, &pipeline.state_alpha)?;
         pipeline.state_beta = pipeline.state_alpha;
 
-        // Step H: Zero-allocation pointer rotation via pointer swapping
         unsafe {
             let mut ptr_a = &mut pipeline.state_alpha as *mut SymplecticState;
             let mut ptr_b = &mut pipeline.state_beta as *mut SymplecticState;
@@ -136,11 +105,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Graceful Shutdown: Serialize state parameters cleanly to partitioned JSONs
-    println!("[ANIMA CORE] Freezing continuous loops. Committing frames to partition...");
     PersistenceManager::write_core_frame(&pipeline.state_alpha, pipeline.audio_wave_field.phase_velocity)?;
     PersistenceManager::write_latent_frame(&pipeline.psyche)?;
-
-    println!("[ANIMA CORE] Execution sweep complete. All layers safely hibernating.");
     Ok(())
 }
