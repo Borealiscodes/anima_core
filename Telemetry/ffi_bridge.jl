@@ -1,5 +1,5 @@
 # ffi_bridge.jl
-# Phase III Architecture: Audiocentric Telemetry Gyroscope & Holonomy Tracker
+# Phase III Architecture: Audiocentric & Agency-Aware Telemetry Gyroscope
 
 using Libdl
 using StaticArrays
@@ -10,17 +10,27 @@ struct SymplecticState
     p::MVector{40, Float64}
 end
 
-# New: Explicit mirror of mem8_audio.rs Layout
+# Explicit mirror of mem8_audio.rs Layout
 struct Mem8WaveRegister
     wave_amplitude::MVector{64, Float64}
     phase_velocity::Float64
     refractory_ticks::UInt32
 end
 
+# Explicit mirror of psychological.rs Layout
+struct PsychicLayerEngine
+    latent_pressure::Float64
+    shame_threshold::Float64
+    active_shame::Float64
+    structural_scars::MVector{16, Float64}
+    scar_count::Csize_t
+end
+
 struct PipelineMemory
     state_alpha::SymplecticState
     state_beta::SymplecticState
     audio_wave_field::Mem8WaveRegister
+    psyche::PsychicLayerEngine
 end
 
 function run_telemetry_gyroscope(lib_path::String)
@@ -40,6 +50,7 @@ function run_telemetry_gyroscope(lib_path::String)
         registry_view = unsafe_load(registry_ptr_raw)
         active_state = registry_view.state_alpha
         audio_layer  = registry_view.audio_wave_field
+        psych_layer  = registry_view.psyche
         
         # Geometrical contractions via StaticArrays views
         q_norm = sqrt(sum(active_state.q .^ 2))
@@ -47,7 +58,7 @@ function run_telemetry_gyroscope(lib_path::String)
         dot_product = sum(active_state.q .* active_state.p)
         geometric_drift = q_norm * p_norm > 0 ? dot_product / (q_norm * p_norm) : 0.0
         
-        println("[SAMPLE $(sample)] Q-Norm: $(round(q_norm, digits=4)) | P-Norm: $(round(p_norm, digits=4)) | Holonomy Angle: $(round(geometric_drift, digits=6)) | MEM|8 Phase Vel: $(round(audio_layer.phase_velocity, digits=6))")
+        println("[SAMPLE $(sample)] Q-Norm: $(round(q_norm, digits=4)) | P-Norm: $(round(p_norm, digits=4)) | Holonomy Angle: $(round(geometric_drift, digits=6)) | MEM|8 Phase Vel: $(round(audio_layer.phase_velocity, digits=6)) | Active Scars: $(psych_layer.scar_count)/16")
         
         sleep(0.1)
     end
@@ -57,3 +68,4 @@ function run_telemetry_gyroscope(lib_path::String)
 end
 
 run_telemetry_gyroscope("./target/release/libanima_core.so")
+
