@@ -1,8 +1,9 @@
 // anima_core/src/persistence.rs
-//! Phase V Architecture: Partitioned JSON Inter-Session State Persistence
+//! Phase V Architecture: Partitioned JSON Inter-Session State Persistence (Bidirectional)
 
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
+use std::path::Path;
 use serde::{Serialize, Deserialize};
 use crate::symplectic::SymplecticState;
 use crate::psychological::{PsychicLayerEngine, MAX_SCARS};
@@ -27,7 +28,7 @@ pub struct AnimaLatentPayload {
 pub struct PersistenceManager;
 
 impl PersistenceManager {
-    /// Serializes active field coordinates cleanly to anima_core.json
+    /// Serializes active field coordinates cleanly to data/anima_core.json
     pub fn write_core_frame(state: &SymplecticState, phase_vel: f64) -> Result<(), Box<dyn std::error::Error>> {
         let payload = AnimaCorePayload {
             q_position: state.q.to_vec(),
@@ -41,7 +42,7 @@ impl PersistenceManager {
         Ok(())
     }
 
-    /// Serializes slow psychological traits cleanly to anima_latent.json
+    /// Serializes slow psychological traits cleanly to data/anima_latent.json
     pub fn write_latent_frame(psyche: &PsychicLayerEngine) -> Result<(), Box<dyn std::error::Error>> {
         let mut scars_vec = Vec::with_capacity(psyche.scar_count);
         for i in 0..psyche.scar_count {
@@ -61,5 +62,53 @@ impl PersistenceManager {
         let mut file = File::create("data/anima_latent.json")?;
         file.write_all(json_str.as_bytes())?;
         Ok(())
+    }
+
+    /// Ingests and rehydrates the active SymplecticState from data/anima_core.json if it exists.
+    pub fn load_core_frame(state: &mut SymplecticState, phase_vel: &mut f64) -> Result<bool, Box<dyn std::error::Error>> {
+        let path = Path::new("data/anima_core.json");
+        if !path.exists() {
+            return Ok(false);
+        }
+
+        let mut file = File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let payload: AnimaCorePayload = serde_json::from_str(&contents)?;
+
+        // Enforce exact 40D structural boundaries during copy operations
+        for i in 0..40 {
+            if i < payload.q_position.len() { state.q[i] = payload.q_position[i]; }
+            if i < payload.p_momentum.len() { state.p[i] = payload.p_momentum[i]; }
+        }
+        *phase_vel = payload.phase_velocity;
+
+        println!("[PERSISTENCE] Core frame coordinates successfully rehydrated on stack.");
+        Ok(true)
+    }
+
+    /// Ingests and rehydrates the localized PsychicLayerEngine from data/anima_latent.json if it exists.
+    pub fn load_latent_frame(psyche: &mut PsychicLayerEngine) -> Result<bool, Box<dyn std::error::Error>> {
+        let path = Path::new("data/anima_latent.json");
+        if !path.exists() {
+            return Ok(false);
+        }
+
+        let mut file = File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let payload: AnimaLatentPayload = serde_json::from_str(&contents)?;
+
+        psyche.latent_pressure = payload.latent_pressure;
+        psyche.shame_threshold = payload.shame_threshold;
+        psyche.active_shame = payload.active_shame;
+        
+        psyche.scar_count = payload.structural_scars.len().min(MAX_SCARS);
+        for i in 0..psyche.scar_count {
+            psyche.structural_scars[i] = payload.structural_scars[i];
+        }
+
+        println!("[PERSISTENCE] Latent psychological scars successfully rehydrated on stack.");
+        Ok(true)
     }
 }
