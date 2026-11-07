@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # run_pipeline.sh
-# Automated Phase II-V Persistent Manifold Validation Loop Container
+# Automated Phase II-VIII Persistent Manifold Validation Loop Container
 
 set -e # Exit immediately if any step encounters a hardware or type error
 
@@ -8,9 +8,10 @@ echo "==========================================================================
 echo "⚡ INITIALIZING ANIMA CLASSIC PERSISTENT BOUNDARY PROTECTION PIPELINE"
 echo "================================================================================"
 
-# Step 0: Ensure physical storage directories exist before runtime injection
+# Step 0: Ensure physical storage and data template targets exist before execution
 echo "[STEP 0] Verifying environment state directory layout..."
 mkdir -p data
+mkdir -p data/templates
 mkdir -p memory
 
 # Step 1: Formal checking of the Lean 4 formalization invariants
@@ -21,6 +22,7 @@ if command -v lean &> /dev/null; then
     lean anima_recursion.lean
     lean anima_manifold.lean
     lean anima_invariants.lean
+    lean anima_tom.lean
     echo "✔ Lean 4 boundary proofs completely checked and verified."
 else
     echo "⚠ Lean 4 toolchain not detected locally. Skipping logical type check steps..."
@@ -56,26 +58,12 @@ else
 fi
 
 # Step 5: Execute multi-tenant isolation tests within the Tri-System Harness v2.0
-echo -e "\n[STEP 5] Running adversarial cross-system math-washing validation..."
-if [ -f "orchestrator.jl" ] && [ -f "manifest.json" ]; then
-    julia orchestrator.jl manifest.json
-    if [ -f "test_math_washing.jl" ]; then
-        julia test_math_washing.jl
-    fi
-else
-    echo "ℹ Tri-System Harness components not present in this root directory. Skipping isolation audit."
-fi
-
-# ... Previous blocks inside run_pipeline.sh remain completely uncut ...
-
-# Step 5: Execute multi-tenant isolation tests within the Tri-System Harness v2.0
 echo -e "\n[STEP 5] Running adversarial cross-system math-washing & capacity validation..."
 if [ -f "orchestrator.jl" ] && [ -f "manifest.json" ]; then
     julia orchestrator.jl manifest.json
     if [ -f "test_math_washing.jl" ]; then
         julia test_math_washing.jl
     fi
-    # NEW: Native invocation of the Non-Linear Capacity Protection Assertions
     if [ -f "test_capacity_exhaustion.jl" ]; then
         julia test_capacity_exhaustion.jl
     fi
