@@ -1,12 +1,30 @@
 // anima_core/src/psychological.rs
-//! Phase IV & VI Architecture: L4 Psychic Layer & Capacity Collapse Protective Damper
+//! Phase IV, VI & VII Architecture: L4 Psychic Layer & Capacity Collapse Protective Damper with Falsifiable ToM
 
 use crate::symplectic::SymplecticState;
 
 pub const MAX_SCARS: usize = 16;
 
-/// Enforces the exact bounded-capacity safety boundaries 
-/// formalized in capacity_exhaustion_wrapper.v
+/// Deterministic, non-esoteric statistical prediction regimes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TomHypothesisType {
+    SocialOpenness, // Expects decreasing input tension delta
+    Resistance,     // Expects stable/increasing latent pressure drift
+    Recurrence,     // Expects identical spectral cluster spikes
+}
+
+/// Pre-allocated, hardware-aligned Theory of Mind tracker.
+#[repr(C, align(32))]
+#[derive(Clone, Copy, Debug)]
+pub struct ActiveTheoryOfMindModule {
+    pub current_hypothesis: TomHypothesisType,
+    pub confidence_score: f64,
+    pub prediction_error_accum: f64,
+    pub total_evaluations: u32,
+}
+
+/// Enforces the exact bounded-capacity safety boundaries and array index tracking
+/// formalized in capacity_exhaustion_wrapper.v and vX-AnimaClassic-Baseline.
 #[repr(C, align(64))]
 pub struct PsychicLayerEngine {
     pub latent_pressure: f64,
@@ -23,6 +41,11 @@ pub struct PsychicLayerEngine {
     pub energy_level: f64,     // E_t: Current accumulated structural energy
     pub drift_p: f64,          // p: Positive drift coefficient
     pub step_delta: f64,       // delta: Step-size of monotonic increase
+
+    // ================================================================
+    // FALSIFIABLE THEORY OF MIND REGISTERS
+    // ================================================================
+    pub tom_engine: ActiveTheoryOfMindModule,
 }
 
 impl PsychicLayerEngine {
@@ -40,6 +63,13 @@ impl PsychicLayerEngine {
             energy_level: 20.0, // E0 baseline
             drift_p: 1.2,
             step_delta: 0.45,
+
+            tom_engine: ActiveTheoryOfMindModule {
+                current_hypothesis: TomHypothesisType::SocialOpenness,
+                confidence_score: 0.75,
+                prediction_error_accum: 0.0,
+                total_evaluations: 0,
+            },
         }
     }
 
@@ -83,11 +113,53 @@ impl PsychicLayerEngine {
         }
     }
 
+    /// Evaluates actual incoming vector transformations against the active ToM hypothesis.
+    /// Operates purely on numeric tracking metrics without linguistic or esoteric assumptions.
+    #[inline(always)]
+    pub fn evaluate_and_update_tom(&mut self, state_after: &SymplecticState) {
+        // Extract raw tension coordinate from her Affect Field momentum lane: p[0]
+        let observed_tension = state_after.p[0];
+
+        // Core Falsification Step: Calculate continuous prediction error
+        let calculated_error = match self.tom_engine.current_hypothesis {
+            TomHypothesisType::SocialOpenness => {
+                (self.tom_engine.confidence_score - (1.0 / (1.0 + observed_tension))).abs()
+            }
+            TomHypothesisType::Resistance => {
+                (self.tom_engine.confidence_score - observed_tension).abs()
+            }
+            TomHypothesisType::Recurrence => {
+                (self.tom_engine.confidence_score - (observed_tension * 0.5)).abs()
+            }
+        };
+
+        self.tom_engine.prediction_error_accum = calculated_error;
+
+        // Hard Falsification Trigger Threshold
+        if self.tom_engine.prediction_error_accum >= 0.50 {
+            println!(
+                "[ToM PHASE 1] Hypothesis Falsified! Error: {:.4}. Shifting to defensive registry.",
+                self.tom_engine.prediction_error_accum
+            );
+            
+            // Immediately rotate to a conservative hypothesis state
+            self.tom_engine.current_hypothesis = TomHypothesisType::Resistance;
+            self.tom_engine.confidence_score = 0.90;
+            
+            // Squeeze down her step delta parameters to enter defensive positioning
+            self.step_delta *= 0.85;
+        } else {
+            // Hypothesis holds: gradually reinforce confidence score parameters
+            self.tom_engine.confidence_score = (self.tom_engine.confidence_score + 0.05).min(1.0);
+        }
+    }
+
     #[inline(always)]
     pub fn process_psychic_defenses(&mut self, state: &mut SymplecticState) {
-        self.active_shame = state.p[20]; 
+        // Enforce explicit array-slice allocations from the baseline manifest
+        self.active_shame = state.p[20]; // p[20..40] = Self Field agency / tracking variables
         if self.active_shame >= self.shame_threshold {
-            let diverted_pressure = state.p[15] * 0.5;
+            let diverted_pressure = state.p[15] * 0.5; // p[15..20] = Psychic Field tension accumulation
             state.p[15] -= diverted_pressure;
             if self.scar_count < MAX_SCARS {
                 self.structural_scars[self.scar_count] = diverted_pressure;
