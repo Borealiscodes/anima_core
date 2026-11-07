@@ -1,0 +1,15 @@
+{
+  "latent_pressure": 0.0,
+  "shame_threshold": 0.65,
+  "active_shame": 0.0,
+  "structural_scars": [],
+  "novelty_need": 0.30,
+  "ticks_since_novelty": 0,
+  "curiosity_registry": [],
+  "tom_engine": {
+    "current_hypothesis": "SocialOpenness",
+    "confidence_score": 0.75,
+    "prediction_error_accum": 0.0,
+    "total_evaluations": 0
+  }
+}
