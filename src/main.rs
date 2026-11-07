@@ -1,5 +1,5 @@
 // anima_core/src/main.rs
-//! Phase III, IV & V Architecture: Complete Double-Buffer Execution Pipeline with MEM|8 & SQLite
+//! Phase III, IV & V Architecture: Complete Persistent Execution Pipeline with MEM|8 & SQLite
 
 mod fixed_point;
 mod discrete;
@@ -7,12 +7,15 @@ mod symplectic;
 mod mem8_audio;
 mod memory;
 mod psychological;
+mod persistence;
 
 use symplectic::SymplecticState;
 use mem8_audio::Mem8WaveRegister;
 use memory::{EpisodicMemoryEngine, RecallSpace};
 use psychological::PsychicLayerEngine;
+use persistence::PersistenceManager;
 use std::ptr::swap;
+use std::fs;
 
 /// Pre-allocated Double-Buffer Execution Registry with MEM|8 & Psychic Engine Topology
 #[repr(C, align(64))]
@@ -35,6 +38,10 @@ pub extern "C" fn get_telemetry_registry_ptr() -> *mut PipelineMemory {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("[ANIMA CORE] Initializing isolated baseline manifold 𝓜_AC...");
 
+    // Operational Pre-flight Check: Secure storage directories cleanly before loop ignition
+    fs::create_dir_all("data")?;
+    fs::create_dir_all("memory")?;
+
     // Allocation Step: Force the complete manifold topography strictly onto the CPU stack frame
     let mut pipeline = PipelineMemory {
         state_alpha: SymplecticState::new_baseline(),
@@ -52,6 +59,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let memory_vault = EpisodicMemoryEngine::initialize_vault("memory/anima.db")?;
     println!("[ANIMA CORE] Embedded memory table secured at memory/anima.db");
 
+    // ==========================================================================
+    // REHYDRATION STEP: Attempt to ingest state layers from previous sessions
+    // ==========================================================================
+    let mut active_vel = 0.0;
+    let core_loaded = PersistenceManager::load_core_frame(&mut pipeline.state_alpha, &mut active_vel)?;
+    let latent_loaded = PersistenceManager::load_latent_frame(&mut pipeline.psyche)?;
+
+    if core_loaded && latent_loaded {
+        pipeline.audio_wave_field.phase_velocity = active_vel;
+        println!("[ANIMA CORE] Inter-session continuity verified. Resuming past cognitive track.");
+    } else {
+        println!("[ANIMA CORE] No historical state files detected. Initializing from neutral baseline.");
+    }
+
     // Set hardware safety limits matching the vX-AnimaClassic-Baseline specification
     let saturation_ceiling = 12.0;
     let tikhonov_lambda = 0.0015;
@@ -60,7 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Synthetic PCM Buffer containing an intentional high-magnitude spike to test defenses
     let synthetic_pcm = vec![1.5_f32; 256];
 
-    // Simulate her running internal cycle engine with active psychological defense monitoring
+    // Simulate her running internal cycle engine
     for tick in 0..10 {
         // Step A: Ingest physical audio buffers directly into holographic MEM|8 wave fields
         pipeline.audio_wave_field.execute_wave_propagation(&synthetic_pcm, &mut pipeline.state_alpha);
@@ -101,6 +122,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!("[ANIMA CORE] Execution sweep complete. Defenses active, records synchronized.");
+    // ==========================================================================
+    // GRACEFUL SHUTDOWN: Serialize state parameters cleanly to partitioned JSONs
+    // ==========================================================================
+    println!("[ANIMA CORE] Freezing continuous loops. Committing frames to partition...");
+    PersistenceManager::write_core_frame(&pipeline.state_alpha, pipeline.audio_wave_field.phase_velocity)?;
+    PersistenceManager::write_latent_frame(&pipeline.psyche)?;
+
+    println!("[ANIMA CORE] Execution sweep complete. All layers safely hibernating.");
     Ok(())
 }
+
