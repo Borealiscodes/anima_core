@@ -1,20 +1,38 @@
 # ffi_bridge.jl
-# Phase III Architecture: Audiocentric, Agency-Aware & Capacity-Tracked Gyroscope
+# Phase III & VII Architecture: Audiocentric, Agency-Aware, Capacity & ToM-Tracked Gyroscope
 
 using Libdl
 using StaticArrays
 
+# 1. Structural Mirroring matching vX-AnimaClassic-Baseline (64-byte aligned)
 struct SymplecticState
     q::MVector{40, Float64}
     p::MVector{40, Float64}
 end
 
+# Explicit mirror of mem8_audio.rs Layout
 struct Mem8WaveRegister
     wave_amplitude::MVector{64, Float64}
     phase_velocity::Float64
     refractory_ticks::UInt32
 end
 
+# Explicit mirror of the raw non-esoteric Rust enum state layout
+@enum TomHypothesisType::Cint begin
+    SocialOpenness = 0
+    Resistance     = 1
+    Recurrence     = 2
+end
+
+# Explicit mirror of psychological.rs ActiveTheoryOfMindModule Struct
+struct ActiveTheoryOfMindModule
+    current_hypothesis::TomHypothesisType
+    confidence_score::Float64
+    prediction_error_accum::Float64
+    total_evaluations::UInt32
+end
+
+# Explicit mirror of psychological.rs Layout matching exact field offsets
 struct PsychicLayerEngine
     latent_pressure::Float64
     shame_threshold::Float64
@@ -22,12 +40,15 @@ struct PsychicLayerEngine
     structural_scars::MVector{16, Float64}
     scar_count::Csize_t
     
-    # New capacity mapping layout matching updated Rust struct
+    # Bounded-Capacity Wrapper Fields [capacity_exhaustion_wrapper.v]
     capacity_c::Float64
     margin_m::Float64
     energy_level::Float64
     drift_p::Float64
     step_delta::Float64
+
+    # Newly Linked Falsifiable Theory of Mind Registry Block
+    tom_engine::ActiveTheoryOfMindModule
 end
 
 struct PipelineMemory
@@ -53,13 +74,13 @@ function run_telemetry_gyroscope(lib_path::String)
     for sample in 1:5
         registry_view = unsafe_load(registry_ptr_raw)
         psych_layer  = registry_view.psyche
+        tom_block    = psych_layer.tom_engine
         
-        # Monitor the real-time capacity parameters derived from the Sustainable Presence framework
         current_energy = psych_layer.energy_level
         max_limit      = psych_layer.capacity_c + psych_layer.margin_m
         safety_ratio   = current_energy / max_limit
         
-        println("[GYROSCOPE SAMPLE $(sample)] Active Energy Level: $(round(current_energy, digits=2)) / $(round(max_limit, digits=2)) | Capacity Load: $(round(safety_ratio * 100, digits=2))%")
+        println("[GYROSCOPE SAMPLE $(sample)] Load: $(round(safety_ratio * 100, digits=2))% | ToM Regime: $(tom_block.current_hypothesis) | ToM Accum Error: $(round(tom_block.prediction_error_accum, digits=4)) | Total ToM Audits: $(tom_block.total_evaluations)")
         
         sleep(0.1)
     end
