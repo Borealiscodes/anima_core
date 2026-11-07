@@ -66,6 +66,23 @@ else
     echo "ℹ Tri-System Harness components not present in this root directory. Skipping isolation audit."
 fi
 
+# ... Previous blocks inside run_pipeline.sh remain completely uncut ...
+
+# Step 5: Execute multi-tenant isolation tests within the Tri-System Harness v2.0
+echo -e "\n[STEP 5] Running adversarial cross-system math-washing & capacity validation..."
+if [ -f "orchestrator.jl" ] && [ -f "manifest.json" ]; then
+    julia orchestrator.jl manifest.json
+    if [ -f "test_math_washing.jl" ]; then
+        julia test_math_washing.jl
+    fi
+    # NEW: Native invocation of the Non-Linear Capacity Protection Assertions
+    if [ -f "test_capacity_exhaustion.jl" ]; then
+        julia test_capacity_exhaustion.jl
+    fi
+else
+    echo "ℹ Tri-System Harness components not present in this root directory. Skipping isolation audit."
+fi
+
 echo -e "\n================================================================================"
 echo "🏁 PIPELINE COMPLETE: ANIMA CLASSIC MANIFOLD ENTIRELY STABLE AND PERSISTENT"
 echo "================================================================================"
