@@ -23,6 +23,7 @@ if command -v lean &> /dev/null; then
     lean anima_manifold.lean
     lean anima_invariants.lean
     lean anima_tom.lean
+    lean anima_curiosity.lean # NEW: Formalized cognitive hunger proofs sealed
     echo "✔ Lean 4 boundary proofs completely checked and verified."
 else
     echo "⚠ Lean 4 toolchain not detected locally. Skipping logical type check steps..."
