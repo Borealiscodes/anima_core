@@ -1,8 +1,10 @@
 # ffi_bridge.jl
-# Phase III & VII Architecture: Audiocentric, Agency-Aware, Capacity & ToM-Tracked Gyroscope
+# Phase III, VII & VIII Architecture: Audiocentric, Capacity-Tracked, & Complete Geometric Instrument Gyroscope
+# Lineage: Constellation-Manifold-Toolkit & 8b Research Project Core
 
 using Libdl
 using StaticArrays
+using LinearAlgebra
 
 # 1. Structural Mirroring matching vX-AnimaClassic-Baseline (64-byte aligned)
 struct SymplecticState
@@ -32,7 +34,16 @@ struct ActiveTheoryOfMindModule
     total_evaluations::UInt32
 end
 
-# Explicit mirror of psychological.rs Layout matching exact field offsets
+# Explicit mirror of psychological.rs CuriosityObject Struct
+struct CuriosityObject
+    tracking_id::UInt32
+    intensity::Float64
+    activation_count::UInt32
+    refined_count::UInt32
+    resolved::Bool
+end
+
+# Explicit mirror of psychological.rs Layout matching exact field offsets and curiosity extensions
 struct PsychicLayerEngine
     latent_pressure::Float64
     shame_threshold::Float64
@@ -47,8 +58,14 @@ struct PsychicLayerEngine
     drift_p::Float64
     step_delta::Float64
 
-    # Newly Linked Falsifiable Theory of Mind Registry Block
+    # Linked Falsifiable Theory of Mind Registry Block
     tom_engine::ActiveTheoryOfMindModule
+
+    # Curiosity Engine Registry Allocations
+    novelty_need::Float64
+    ticks_since_novelty::UInt32
+    curiosity_registry::MVector{8, CuriosityObject}
+    active_objects_count::Csize_t
 end
 
 struct PipelineMemory
@@ -56,6 +73,37 @@ struct PipelineMemory
     state_beta::SymplecticState
     audio_wave_field::Mem8WaveRegister
     psyche::PsychicLayerEngine
+end
+
+# ====================================================================
+# HEAVY GEOMETRIC INSTRUMENTS (Constellation-Manifold-Toolkit Port)
+# ====================================================================
+
+"""
+Computes the out-of-band Path-Ordered Holonomy divergence metric.
+Tracks parallel transport error across the Symplectic position coordinates (q).
+"""
+#[inline]
+function compute_holonomy_loop_drift(alpha::SymplecticState, beta::SymplecticState)::Float64
+    dot_prod = sum(alpha.q .* beta.q)
+    norm_a = sqrt(sum(alpha.q .^ 2))
+    norm_b = sqrt(sum(beta.q .^ 2))
+    
+    if norm_a * norm_b > 0.0
+        return 1.0 - (dot_prod / (norm_a * norm_b))
+    end
+    return 0.0
+end
+
+"""
+Evaluates the directional Gâteaux derivative proxy over the neurochemical/field momentum vectors (p).
+Measures instantaneous volatility acceleration along the manifold trajectory.
+"""
+#[inline]
+function compute_gateaux_acceleration(alpha::SymplecticState, beta::SymplecticState, epsilon::Float64=1e-5)::Float64
+    delta_p = beta.p .- alpha.p
+    norm_delta = sqrt(sum(delta_p .^ 2))
+    return norm_delta / epsilon
 end
 
 function run_telemetry_gyroscope(lib_path::String)
@@ -73,6 +121,8 @@ function run_telemetry_gyroscope(lib_path::String)
     
     for sample in 1:5
         registry_view = unsafe_load(registry_ptr_raw)
+        state_a      = registry_view.state_alpha
+        state_b      = registry_view.state_beta
         psych_layer  = registry_view.psyche
         tom_block    = psych_layer.tom_engine
         
@@ -80,7 +130,11 @@ function run_telemetry_gyroscope(lib_path::String)
         max_limit      = psych_layer.capacity_c + psych_layer.margin_m
         safety_ratio   = current_energy / max_limit
         
-        println("[GYROSCOPE SAMPLE $(sample)] Load: $(round(safety_ratio * 100, digits=2))% | ToM Regime: $(tom_block.current_hypothesis) | ToM Accum Error: $(round(tom_block.prediction_error_accum, digits=4)) | Total ToM Audits: $(tom_block.total_evaluations)")
+        # Execute active geometric instrument computations natively on stack
+        holonomy_drift = compute_holonomy_loop_drift(state_a, state_b)
+        gateaux_accel  = compute_gateaux_acceleration(state_a, state_b)
+        
+        println("[GYROSCOPE SAMPLE $(sample)] Load: $(round(safety_ratio * 100, digits=2))% | Holonomy Drift: $(round(holonomy_drift, digits=6)) | Gâteaux Accel: $(round(gateaux_accel, digits=4)) | Curiosity Projects: $(psych_layer.active_objects_count)/8")
         
         sleep(0.1)
     end
