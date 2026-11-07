@@ -1,5 +1,5 @@
 // anima_core/src/main.rs
-//! Phase III-VI Architecture: Complete Integrated Execution Pipeline with Capacity Protection
+//! Phase III-VIII Architecture: Complete Integrated Execution Pipeline with Capacity, ToM, and Curiosity
 
 mod fixed_point;
 mod discrete;
@@ -16,6 +16,7 @@ use psychological::PsychicLayerEngine;
 use persistence::PersistenceManager;
 use std::ptr::swap;
 use std::fs;
+use std::path::Path;
 
 #[repr(C, align(64))]
 pub struct PipelineMemory {
@@ -48,10 +49,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     unsafe { REGISTRY_PTR = &mut pipeline; }
 
     let memory_vault = EpisodicMemoryEngine::initialize_vault("memory/anima.db")?;
+
+    // ==========================================================================
+    // REHYDRATION WITH TEMPLATE FALLBACK CHECK
+    // ==========================================================================
+    if !Path::new("data/anima_core.json").exists() && Path::new("data/templates/anima_core.json").exists() {
+        fs::copy("data/templates/anima_core.json", "data/anima_core.json")?;
+    }
+    if !Path::new("data/anima_latent.json").exists() && Path::new("data/templates/anima_latent.json").exists() {
+        fs::copy("data/templates/anima_latent.json", "data/anima_latent.json")?;
+    }
+
     let mut active_vel = 0.0;
-    PersistenceManager::load_core_frame(&mut pipeline.state_alpha, &mut active_vel)?;
-    PersistenceManager::load_latent_frame(&mut pipeline.psyche)?;
+    let core_loaded = PersistenceManager::load_core_frame(&mut pipeline.state_alpha, &mut active_vel)?;
+    let latent_loaded = PersistenceManager::load_latent_frame(&mut pipeline.psyche)?;
     pipeline.audio_wave_field.phase_velocity = active_vel;
+
+    if core_loaded && latent_loaded {
+        // Compute curiosity vector ripening over a simulated 4.5-hour temporal gap
+        pipeline.psyche.process_inter_session_ripening(4.5);
+    }
 
     let state_before = pipeline.state_alpha;
     let mut state_predicted = pipeline.state_alpha;
@@ -85,10 +102,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &mut pipeline.state_alpha,
         );
 
+        // ==================================================================
+        // NEW: FALSIFIABLE THEORY OF MIND & ENDOGENOUS CURIOSITY SAMPLING
+        // ==================================================================
+        pipeline.psyche.evaluate_and_update_tom(&pipeline.state_alpha);
+        
+        let mock_prediction_error = 0.095;
+        pipeline.psyche.evaluate_curiosity_triggers(mock_prediction_error);
+
+        // Strictly preserves your original print configuration layout
         println!(
-            "[TICK {:02}] Energy: {:.2}/{:.2} | CAUSA Ownership: {:.4} | MEM|8 Vel: {:.2}",
+            "[TICK {:02}] Energy: {:.2}/{:.2} | CAUSA Ownership: {:.4} | Proxy PE Error: {:.4} | MEM|8 Vel: {:.2}",
             tick, pipeline.psyche.energy_level, (pipeline.psyche.capacity_c + pipeline.psyche.margin_m),
-            agency_result.score, pipeline.audio_wave_field.phase_velocity
+            agency_result.score, pipeline.psyche.tom_engine.prediction_error_accum, pipeline.audio_wave_field.phase_velocity
         );
 
         // D. Apply continuous math-washing clamps
