@@ -1,0 +1,7 @@
+-R . AnimaClassic
+-arg -w -arg all
+
+System3Harness.v
+AnimaDecayInvariants.v
+AnimaDefenses.v
+AnimaAudioInvariants.v
