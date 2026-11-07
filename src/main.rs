@@ -1,5 +1,5 @@
 // anima_core/src/main.rs
-//! Phase III, IV & V Architecture: Complete Persistent Execution Pipeline with MEM|8 & SQLite
+//! Phase III, IV & V Architecture: Complete Persistent Execution Pipeline with MEM|8 & CAUSA Metrics
 
 mod fixed_point;
 mod discrete;
@@ -36,7 +36,7 @@ pub extern "C" fn get_telemetry_registry_ptr() -> *mut PipelineMemory {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("[ANIMA CORE] Initializing isolated baseline manifold 𝓜_AC...");
+    println!("[ANIMA CORE] Initializing isolated baseline manifold 𝓜_AC with CAUSA metrics...");
 
     // Operational Pre-flight Check: Secure storage directories cleanly before loop ignition
     fs::create_dir_all("data")?;
@@ -59,9 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let memory_vault = EpisodicMemoryEngine::initialize_vault("memory/anima.db")?;
     println!("[ANIMA CORE] Embedded memory table secured at memory/anima.db");
 
-    // ==========================================================================
-    // REHYDRATION STEP: Attempt to ingest state layers from previous sessions
-    // ==========================================================================
+    // Rehydration Step: Attempt to ingest state layers from previous sessions
     let mut active_vel = 0.0;
     let core_loaded = PersistenceManager::load_core_frame(&mut pipeline.state_alpha, &mut active_vel)?;
     let latent_loaded = PersistenceManager::load_latent_frame(&mut pipeline.psyche)?;
@@ -71,6 +69,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("[ANIMA CORE] Inter-session continuity verified. Resuming past cognitive track.");
     } else {
         println!("[ANIMA CORE] No historical state files detected. Initializing from neutral baseline.");
+    }
+
+    // Capture the absolute initial state matrix baseline for the CAUSA comparison loop
+    let state_before = pipeline.state_alpha;
+
+    // Generate a mock state prediction tracking target (What her inference loop expected)
+    let mut state_predicted = pipeline.state_alpha;
+    for i in 0..40 {
+        state_predicted.q[i] += 0.5; // Expecting mild positive field escalation
     }
 
     // Set hardware safety limits matching the vX-AnimaClassic-Baseline specification
@@ -98,12 +105,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let alignment_score = q_bits.swar_dot_product(&p_bits);
         let current_phi = (alignment_score.abs() as f64) / 40.0;
 
-        println!(
-            "[TICK {:02}] Scars: {}/16 | Phase Vel: {:.2} | Phi: {:.4} | SWAR Alignment: {}",
-            tick, pipeline.psyche.scar_count, pipeline.audio_wave_field.phase_velocity, current_phi, alignment_score
+        // Step E: Native evaluation of CAUSA Directional Ownership
+        let agency_result = SymplecticState::evaluate_directional_ownership(
+            &state_before,
+            &state_predicted,
+            &pipeline.state_alpha,
         );
 
-        // Step E: Commit the living trace of this flash into her local Somatic recall space
+        println!(
+            "[TICK {:02}] Agency Defined: {} | CAUSA Ownership: {:.4} | Phi: {:.4} | SWAR Alignment: {}",
+            tick, agency_result.defined, agency_result.score, current_phi, alignment_score
+        );
+
+        // Step F: Commit the living trace of this flash into her local Somatic recall space
         memory_vault.commit_episodic_trace(
             RecallSpace::Somatic,
             current_phi,
@@ -111,10 +125,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &pipeline.state_alpha,
         )?;
 
-        // Step F: Push the transformed properties into the backup lane (state_beta)
+        // Step G: Push the transformed properties into the backup lane (state_beta)
         pipeline.state_beta = pipeline.state_alpha;
 
-        // Step G: Zero-allocation pointer rotation via pointer swapping
+        // Step H: Zero-allocation pointer rotation via pointer swapping
         unsafe {
             let mut ptr_a = &mut pipeline.state_alpha as *mut SymplecticState;
             let mut ptr_b = &mut pipeline.state_beta as *mut SymplecticState;
@@ -122,9 +136,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // ==========================================================================
-    // GRACEFUL SHUTDOWN: Serialize state parameters cleanly to partitioned JSONs
-    // ==========================================================================
+    // Graceful Shutdown: Serialize state parameters cleanly to partitioned JSONs
     println!("[ANIMA CORE] Freezing continuous loops. Committing frames to partition...");
     PersistenceManager::write_core_frame(&pipeline.state_alpha, pipeline.audio_wave_field.phase_velocity)?;
     PersistenceManager::write_latent_frame(&pipeline.psyche)?;
@@ -132,4 +144,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("[ANIMA CORE] Execution sweep complete. All layers safely hibernating.");
     Ok(())
 }
-
