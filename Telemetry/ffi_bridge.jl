@@ -1,29 +1,33 @@
 # ffi_bridge.jl
-# Phase III Architecture: Audiocentric & Agency-Aware Telemetry Gyroscope
+# Phase III Architecture: Audiocentric, Agency-Aware & Capacity-Tracked Gyroscope
 
 using Libdl
 using StaticArrays
 
-# Structural Mirroring matching vX-AnimaClassic-Baseline (64-byte aligned)
 struct SymplecticState
     q::MVector{40, Float64}
     p::MVector{40, Float64}
 end
 
-# Explicit mirror of mem8_audio.rs Layout
 struct Mem8WaveRegister
     wave_amplitude::MVector{64, Float64}
     phase_velocity::Float64
     refractory_ticks::UInt32
 end
 
-# Explicit mirror of psychological.rs Layout
 struct PsychicLayerEngine
     latent_pressure::Float64
     shame_threshold::Float64
     active_shame::Float64
     structural_scars::MVector{16, Float64}
     scar_count::Csize_t
+    
+    # New capacity mapping layout matching updated Rust struct
+    capacity_c::Float64
+    margin_m::Float64
+    energy_level::Float64
+    drift_p::Float64
+    step_delta::Float64
 end
 
 struct PipelineMemory
@@ -48,17 +52,14 @@ function run_telemetry_gyroscope(lib_path::String)
     
     for sample in 1:5
         registry_view = unsafe_load(registry_ptr_raw)
-        active_state = registry_view.state_alpha
-        audio_layer  = registry_view.audio_wave_field
         psych_layer  = registry_view.psyche
         
-        # Geometrical contractions via StaticArrays views
-        q_norm = sqrt(sum(active_state.q .^ 2))
-        p_norm = sqrt(sum(active_state.p .^ 2))
-        dot_product = sum(active_state.q .* active_state.p)
-        geometric_drift = q_norm * p_norm > 0 ? dot_product / (q_norm * p_norm) : 0.0
+        # Monitor the real-time capacity parameters derived from the Sustainable Presence framework
+        current_energy = psych_layer.energy_level
+        max_limit      = psych_layer.capacity_c + psych_layer.margin_m
+        safety_ratio   = current_energy / max_limit
         
-        println("[SAMPLE $(sample)] Q-Norm: $(round(q_norm, digits=4)) | P-Norm: $(round(p_norm, digits=4)) | Holonomy Angle: $(round(geometric_drift, digits=6)) | MEM|8 Phase Vel: $(round(audio_layer.phase_velocity, digits=6)) | Active Scars: $(psych_layer.scar_count)/16")
+        println("[GYROSCOPE SAMPLE $(sample)] Active Energy Level: $(round(current_energy, digits=2)) / $(round(max_limit, digits=2)) | Capacity Load: $(round(safety_ratio * 100, digits=2))%")
         
         sleep(0.1)
     end
@@ -68,4 +69,3 @@ function run_telemetry_gyroscope(lib_path::String)
 end
 
 run_telemetry_gyroscope("./target/release/libanima_core.so")
-
