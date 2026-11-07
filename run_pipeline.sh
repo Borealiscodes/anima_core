@@ -14,19 +14,34 @@ mkdir -p data
 mkdir -p data/templates
 mkdir -p memory
 
-# Step 1: Formal checking of the Lean 4 formalization invariants
-echo -e "\n[STEP 1] Validating compile-time invariants via Lean 4 proof gate..."
-if command -v lean &> /dev/null; then
+# Step 1: Formal checking of the Lean 4 and Coq formalization invariants
+echo -e "\n[STEP 1] Validating compile-time invariants via Lean 4 & Coq proof gates..."
+if command -v lake &> /dev/null; then
+    echo "Checking compile-time invariants via Lean 4 package manager (lake)..."
+    lake build
+    echo "✔ Lean 4 boundary proofs completely checked and verified."
+elif command -v lean &> /dev/null; then
+    echo "Checking compile-time invariants via standalone Lean 4 compiler..."
     lean animacoretypes.lean
     lean anima_transition.lean
     lean anima_recursion.lean
     lean anima_manifold.lean
     lean anima_invariants.lean
     lean anima_tom.lean
-    lean anima_curiosity.lean # NEW: Formalized cognitive hunger proofs sealed
+    lean anima_curiosity.lean
     echo "✔ Lean 4 boundary proofs completely checked and verified."
 else
     echo "⚠ Lean 4 toolchain not detected locally. Skipping logical type check steps..."
+fi
+
+if command -v coqc &> /dev/null; then
+    echo "Compiling dynamic real-number calculus proofs via Coq..."
+    make clean
+    make check
+    make proof
+    echo "✔ Coq dynamic invariants completely checked and verified."
+else
+    echo "⚠ Coq compiler chain not detected locally. Skipping dynamic calculus proofs..."
 fi
 
 # Step 2: Compile the complete, zero-allocation persistent Rust binary core
