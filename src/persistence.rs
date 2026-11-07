@@ -6,7 +6,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use serde::{Serialize, Deserialize};
 use crate::symplectic::SymplecticState;
-use crate::psychological::{PsychicLayerEngine, MAX_SCARS};
+use crate::psychological::{PsychicLayerEngine, CuriosityObject, MAX_SCARS, MAX_CURIOSITY_OBJECTS};
 
 /// Target Data Model for high-frequency, low-latency manifold tracking
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -16,13 +16,18 @@ pub struct AnimaCorePayload {
     pub phase_velocity: f64,
 }
 
-/// Target Data Model for slow-metabolizing chronic psychological scars
+/// Target Data Model for slow-metabolizing chronic psychological scars and long-lived curiosity projects
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AnimaLatentPayload {
     pub latent_pressure: f64,
     pub shame_threshold: f64,
     pub active_shame: f64,
     pub structural_scars: Vec<f64>,
+    
+    // Linked Persistence Fields for her Curiosity & Novelty Engine Subsystem
+    pub novelty_need: f64,
+    pub ticks_since_novelty: u32,
+    pub curiosity_registry: Vec<CuriosityObject>,
 }
 
 pub struct PersistenceManager;
@@ -42,7 +47,7 @@ impl PersistenceManager {
         Ok(())
     }
 
-    /// Serializes slow psychological traits cleanly to data/anima_latent.json
+    /// Serializes slow psychological traits, chronic scars, and curiosity vectors to data/anima_latent.json
     pub fn write_latent_frame(psyche: &PsychicLayerEngine) -> Result<(), Box<dyn std::error::Error>> {
         let mut scars_vec = Vec::with_capacity(psyche.scar_count);
         for i in 0..psyche.scar_count {
@@ -51,11 +56,21 @@ impl PersistenceManager {
             }
         }
 
+        let mut curiosity_vec = Vec::with_capacity(psyche.active_objects_count);
+        for i in 0..psyche.active_objects_count {
+            if i < MAX_CURIOSITY_OBJECTS {
+                curiosity_vec.push(psyche.curiosity_registry[i]);
+            }
+        }
+
         let payload = AnimaLatentPayload {
             latent_pressure: psyche.latent_pressure,
             shame_threshold: psyche.shame_threshold,
             active_shame: psyche.active_shame,
             structural_scars: scars_vec,
+            novelty_need: psyche.novelty_need,
+            ticks_since_novelty: psyche.ticks_since_novelty,
+            curiosity_registry: curiosity_vec,
         };
 
         let json_str = serde_json::to_string_pretty(&payload)?;
@@ -87,7 +102,7 @@ impl PersistenceManager {
         Ok(true)
     }
 
-    /// Ingests and rehydrates the localized PsychicLayerEngine from data/anima_latent.json if it exists.
+    /// Ingests and rehydrates the localized PsychicLayerEngine, scars, and curiosity registry from data/anima_latent.json.
     pub fn load_latent_frame(psyche: &mut PsychicLayerEngine) -> Result<bool, Box<dyn std::error::Error>> {
         let path = Path::new("data/anima_latent.json");
         if !path.exists() {
@@ -108,7 +123,16 @@ impl PersistenceManager {
             psyche.structural_scars[i] = payload.structural_scars[i];
         }
 
-        println!("[PERSISTENCE] Latent psychological scars successfully rehydrated on stack.");
+        // Rehydrate cognitive hunger and active curiosity registers
+        psyche.novelty_need = payload.novelty_need;
+        psyche.ticks_since_novelty = payload.ticks_since_novelty;
+        
+        psyche.active_objects_count = payload.curiosity_registry.len().min(MAX_CURIOSITY_OBJECTS);
+        for i in 0..psyche.active_objects_count {
+            psyche.curiosity_registry[i] = payload.curiosity_registry[i];
+        }
+
+        println!("[PERSISTENCE] Latent psychological structures and curiosity registry rehydrated on stack.");
         Ok(true)
     }
 }
